@@ -1,0 +1,39 @@
+# Updated application.yaml for Spring Cloud Gateway (reactive / WebFlux)
+spring:
+  cloud:
+    gateway:
+      # Define reactive gateway routes here. Note: the MVC gateway configuration (spring.cloud.gateway.mvc.*)
+      # is deprecated/experimental; prefer the reactive gateway (spring-cloud-starter-gateway) + WebFlux.
+      routes:
+        - id: product-service
+          uri: http://localhost:8002
+          predicates:
+            - Path=/products/**
+          filters:
+            - StripPrefix=1
+
+        - id: profile-service
+          uri: http://localhost:8003
+          predicates:
+            - Path=/profiles/**
+          filters:
+            # copy incoming Authorization header to downstream
+            - AddRequestHeader=Authorization, {request.headers['Authorization']}
+
+        - id: cart-service
+          uri: http://localhost:8006
+          predicates:
+            - Path=/cart/**
+          filters:
+            - AddRequestHeader=Authorization, {request.headers['Authorization']}
+            # add the authenticated user's subject (sub claim) as X-User-Id
+            - AddRequestHeader=X-User-Id, {authentication.principal.claims['sub']}
+
+okta:
+  oauth2:
+    issuer: https://dev-4g28t22j7fb43hp7.us.auth0.com/
+    client-id: mx4lHTwikyKDisbpST2W0BiMBtG916vM
+    client-secret: lpHgy0Gbu8jg2Z9szDvdTgYAqnPCwS-tBsNzxmP9q0FzlzJVCZPMKDrmsVpDH3HI
+
+server:
+  port: 3000
